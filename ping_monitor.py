@@ -56,9 +56,11 @@ class IndicatorPing:
         self.latest_counter = 0 # How many of the latest pings have been failing
 
         self.update_ui()
-        # start updating every 1 second
+
+        # Start updating every 2 seconds. Don't use a value less than 2 here, see
+		# the link below.
         # http://developer.gnome.org/pygobject/stable/glib-functions.html#function-glib--timeout-add-seconds
-        GLib.timeout_add_seconds(1, self.handler_timeout)
+        GLib.timeout_add_seconds(2, self.handler_timeout)
 
     def ping(self):
         """Pings google.com and returns dot (.) on success, or an X on failure.
@@ -91,7 +93,7 @@ class IndicatorPing:
         else:
             self.latest_counter = 0
 
-        label = str(self.past.count("X")) + "/" + str(self.latest_counter) + "/" + str(min(self.past.maxlen, len(self.past)))
+        label = "ping " + str(self.latest_counter) + ", " + str(self.past.count("X")) + ", " + str(min(self.past.maxlen, len(self.past)))
 
         # print self.past
         # print label
