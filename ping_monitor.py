@@ -3,8 +3,11 @@
 # Adapte from:
 # https://bitbucket.org/cpbotha/indicator-cpuspeed/src
 
-# Requires python version 2.6 or higher, because the deque()'s second parameter,
-# maxlen, was introduced in 2.6
+# Requires python version 2.5 or higher, because
+# 1) the deque()'s second parameter,
+#       maxlen, was introduced in 2.6
+# 2) Wer'e using the `TRUE if EXPR ELSE FALSE` ternary operator
+#       it was introduced in 2.5
 
 from subprocess import check_output
 from collections import deque
@@ -55,18 +58,21 @@ class IndicatorPing:
         self.past = deque("", 10)
         self.latest_counter = 0 # How many of the latest pings have been failing
 
+        self.ping_hard_timeout = 2
+        self.callback_interval = 3 # This should be greater than ping_hard_timeout
+
         self.update_ui()
 
-        # Start updating every 2 seconds. Don't use a value less than 2 here, see
+        # Start updating every 3 seconds. Don't use a value less than 2 here, see
 		# the link below.
         # http://developer.gnome.org/pygobject/stable/glib-functions.html#function-glib--timeout-add-seconds
-        GLib.timeout_add_seconds(2, self.handler_timeout)
+        GLib.timeout_add_seconds(self.callback_interval, self.handler_timeout)
 
     def ping(self):
         """Pings google.com and returns dot (.) on success, or an X on failure.
         """
 
-        return check_output(["sh", "-c", "{ timeout 4 ping -w 3 -c 2 -i 1 google.com >/dev/null 2>&1 && echo -n . ; } || { echo -n X ; }"])
+        return check_output(["sh", "-c", "{ timeout "+ str(self.ping_hard_timeout) +" ping -w 3 -c 2 -i 1 google.com >/dev/null 2>&1 && echo -n . ; } || { echo -n X ; }"])
 
     def handler_menu_exit(self, evt):
         Gtk.main_quit()
@@ -93,12 +99,19 @@ class IndicatorPing:
         else:
             self.latest_counter = 0
 
-        label = "ping " + str(self.latest_counter) + ", " + str(self.past.count("X")) + ", " + str(min(self.past.maxlen, len(self.past)))
+        n1 = self.latest_counter
+        n2 = self.past.count("X")
+        n3 = min(self.past.maxlen, len(self.past))
 
-        # print self.past
-        # print label
+        label = ("ping "
+                + (" " if n1 < 10 else "") + str(n1) + ", "
+                + (" " if n2 < 10 else "") + str(n2) + ", "
+                + (" " if n3 < 10 else "") + str(n3))
 
-        self.ind.set_label(label, "99/99/99")
+        self.ind.set_label(label, "ping 99, 99, 99")
+
+        if self.latest_counter > 0:
+            print label + ": " + str(self.past)
 
     def main(self):
         Gtk.main()
