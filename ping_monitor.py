@@ -105,7 +105,7 @@ class IndicatorPing:
 
         label = ("ping "
                 + (" " if n1 < 10 else "") + str(n1) + ", "
-                + (" " if n2 < 10 else "") + str(n2) + ", "
+                + (" " if n2 < 10 else "") + str(n2) + "/"
                 + (" " if n3 < 10 else "") + str(n3))
 
         self.ind.set_label(label, "ping 99, 99, 99")
